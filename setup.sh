@@ -30,6 +30,21 @@ log() { echo -e "\n==> $*"; }
 
 export DEBIAN_FRONTEND=noninteractive
 
+# ===================== 0. 一次性時間校正 =====================
+# 系統時鐘落後會導致 apt 認定套件庫 Release file 尚未生效而失敗，
+# 故在 apt update 之前先用 chronyd 做一次性校時。
+log "執行一次性時間校正..."
+if ! command -v chronyd >/dev/null 2>&1; then
+  apt update -qq && apt install -y chrony
+fi
+systemctl stop chrony 2>/dev/null || true
+if [[ -n "$NTP_SERVER" ]]; then
+  chronyd -q "server ${NTP_SERVER} iburst" || log "警告：一次性校時失敗，將沿用系統現有時間"
+else
+  chronyd -q "pool ntp.ubuntu.com iburst maxsources 4" || log "警告：一次性校時失敗，將沿用系統現有時間"
+fi
+systemctl start chrony 2>/dev/null || true
+
 # ===================== 1. 系統更新 =====================
 log "更新套件清單..."
 apt update
