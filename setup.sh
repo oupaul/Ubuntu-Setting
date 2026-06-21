@@ -30,6 +30,18 @@ log() { echo -e "\n==> $*"; }
 
 export DEBIAN_FRONTEND=noninteractive
 
+log "執行參數確認："
+echo "  SSH_PORT        : ${SSH_PORT}"
+echo "  USERNAME        : ${USERNAME}"
+echo "  NTP_SERVER      : ${NTP_SERVER:-（未設定，使用 Ubuntu 預設 pool）}"
+echo "  TIMEZONE        : ${TIMEZONE}"
+echo "  ALLOW_TCP_PORTS : ${ALLOW_TCP_PORTS}"
+echo "  IGNORE_IPS      : ${IGNORE_IPS}"
+echo "  SKIP_DIST_UPGRADE: ${SKIP_DIST_UPGRADE}"
+echo
+echo "若上方參數有誤，請 Ctrl+C 中止，確認以 'sudo VAR=value bash setup.sh' 方式傳入。"
+echo
+
 # ===================== 0. 一次性時間校正 =====================
 # 系統時鐘落後會導致 apt 認定套件庫 Release file 尚未生效而失敗，
 # 故在 apt update 之前先用 chronyd 做一次性校時。

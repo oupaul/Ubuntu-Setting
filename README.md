@@ -34,10 +34,16 @@ curl -fsSL https://raw.githubusercontent.com/oupaul/Ubuntu-Setting/main/setup.sh
 範例：
 
 ```bash
+# 先下載
 curl -fsSL https://raw.githubusercontent.com/oupaul/Ubuntu-Setting/main/setup.sh -o setup.sh
+
+# 帶參數執行（VAR=value 必須寫在 sudo 之後、bash 之前）
 sudo SSH_PORT=2589 USERNAME=itadmin NTP_SERVER=192.0.2.1 \
   IGNORE_IPS="192.0.2.0/24 198.51.100.0/24" bash setup.sh
 ```
+
+> **注意**：`export SSH_PORT=2589; sudo bash setup.sh` 或 `SSH_PORT=2589 sudo bash setup.sh` **無效**。
+> sudo 預設的 `env_reset` 會清除繼承的環境變數；參數必須以 `sudo VAR=value bash` 形式直接注入。
 
 ## 注意事項
 
