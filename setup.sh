@@ -113,6 +113,7 @@ fi
 sed -i "/^AllowUsers /d" "$SSHD_CONFIG"
 echo "AllowUsers ${USERNAME}" >> "$SSHD_CONFIG"
 
+mkdir -p /run/sshd
 sshd -t -f "$SSHD_CONFIG"
 systemctl restart ssh
 
