@@ -28,6 +28,8 @@ fi
 
 log() { echo -e "\n==> $*"; }
 
+trap 'echo -e "\n[ERROR] 腳本在第 ${LINENO} 行失敗，退出碼 $?，請檢查上方輸出" >&2' ERR
+
 export DEBIAN_FRONTEND=noninteractive
 
 log "執行參數確認："
@@ -51,22 +53,22 @@ if ! command -v chronyd >/dev/null 2>&1; then
 fi
 systemctl stop chrony 2>/dev/null || true
 if [[ -n "$NTP_SERVER" ]]; then
-  chronyd -q "server ${NTP_SERVER} iburst" || log "警告：一次性校時失敗，將沿用系統現有時間"
+  timeout 30 chronyd -q "server ${NTP_SERVER} iburst" || log "警告：一次性校時失敗，將沿用系統現有時間"
 else
-  chronyd -q "pool ntp.ubuntu.com iburst maxsources 4" || log "警告：一次性校時失敗，將沿用系統現有時間"
+  timeout 30 chronyd -q "pool ntp.ubuntu.com iburst maxsources 4" || log "警告：一次性校時失敗，將沿用系統現有時間"
 fi
 systemctl start chrony 2>/dev/null || true
 
 # ===================== 1. 系統更新 =====================
 log "更新套件清單..."
-apt update
+apt update </dev/null
 
 # 避免 dpkg 鎖死在未完成的設定
-dpkg --configure -a || true
+dpkg --configure -a </dev/null || true
 
 # ===================== 2. 安裝必要套件 =====================
 log "安裝必要套件 (net-tools, chrony, fail2ban, qemu-guest-agent, unattended-upgrades, ufw)..."
-apt install -y net-tools chrony fail2ban qemu-guest-agent unattended-upgrades ufw software-properties-common
+apt install -y net-tools chrony fail2ban qemu-guest-agent unattended-upgrades ufw software-properties-common </dev/null
 
 # ===================== 3. 設定自動安全性更新 =====================
 log "設定 unattended-upgrades（僅安全性更新）..."
@@ -171,8 +173,8 @@ systemctl enable --now qemu-guest-agent
 # ===================== 9. 系統升級 =====================
 if [[ "$SKIP_DIST_UPGRADE" != "1" ]]; then
   log "執行 apt dist-upgrade..."
-  apt dist-upgrade -y
-  apt autoremove -y
+  apt dist-upgrade -y </dev/null
+  apt autoremove -y </dev/null
 fi
 
 log "完成！摘要："
