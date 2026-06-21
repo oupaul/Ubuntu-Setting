@@ -14,10 +14,8 @@
 ## 直接從 GitHub 下載並執行
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/<github-user>/<repo>/<branch>/setup.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/oupaul/Ubuntu-Setting/main/setup.sh | sudo bash
 ```
-
-> 將 `<github-user>/<repo>/<branch>` 換成實際的 repo 路徑，例如 `oupaul/Ubuntu-Setting/main`。
 
 ## 自訂參數（環境變數）
 
@@ -36,7 +34,7 @@ curl -fsSL https://raw.githubusercontent.com/<github-user>/<repo>/<branch>/setup
 範例：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/<github-user>/<repo>/<branch>/setup.sh -o setup.sh
+curl -fsSL https://raw.githubusercontent.com/oupaul/Ubuntu-Setting/main/setup.sh -o setup.sh
 sudo SSH_PORT=2589 USERNAME=itadmin NTP_SERVER=192.0.2.1 \
   IGNORE_IPS="192.0.2.0/24 198.51.100.0/24" bash setup.sh
 ```

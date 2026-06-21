@@ -3,10 +3,10 @@
 # Ubuntu 24.04 VM 基礎設定一鍵部署腳本
 #
 # 用法（直接從 GitHub 下載並執行）：
-#   curl -fsSL https://raw.githubusercontent.com/<user>/<repo>/<branch>/setup.sh | sudo bash
+#   curl -fsSL https://raw.githubusercontent.com/oupaul/Ubuntu-Setting/main/setup.sh | sudo bash
 #
 # 或先下載再以參數客製化：
-#   wget https://raw.githubusercontent.com/<user>/<repo>/<branch>/setup.sh
+#   wget https://raw.githubusercontent.com/oupaul/Ubuntu-Setting/main/setup.sh
 #   sudo SSH_PORT=2589 USERNAME=itadmin NTP_SERVER=192.0.2.1 bash setup.sh
 #
 # 可透過環境變數覆寫的設定值見下方「變數」區塊。
@@ -96,9 +96,8 @@ else
   echo "PermitRootLogin no" >> "$SSHD_CONFIG"
 fi
 
-if ! grep -q "^AllowUsers ${USERNAME}\$" "$SSHD_CONFIG"; then
-  echo "AllowUsers ${USERNAME}" >> "$SSHD_CONFIG"
-fi
+sed -i "/^AllowUsers /d" "$SSHD_CONFIG"
+echo "AllowUsers ${USERNAME}" >> "$SSHD_CONFIG"
 
 sshd -t -f "$SSHD_CONFIG"
 systemctl restart ssh
@@ -120,16 +119,18 @@ fi
 
 cat > /etc/fail2ban/jail.d/local-overrides.conf <<EOF
 [DEFAULT]
-ignoreip = ${IGNORE_IPS}
-bantime  = 1h
-findtime = 10m
-maxretry = 5
+ignoreip         = ${IGNORE_IPS}
+bantime          = 1h
+findtime         = 10m
+maxretry         = 5
+banaction        = ufw
+banaction_allports = ufw
 
 [sshd]
 enabled  = true
 port     = ${SSH_PORT}
 filter   = sshd
-logpath  = /var/log/auth.log
+backend  = systemd
 maxretry = 3
 bantime  = 24h
 EOF
@@ -141,16 +142,15 @@ systemctl restart fail2ban
 log "設定 Chrony NTP..."
 if [[ -n "$NTP_SERVER" ]]; then
   cp /etc/chrony/chrony.conf /etc/chrony/chrony.conf.bak.$(date +%Y%m%d%H%M%S)
-  sed -i -E 's/^(pool .*)/#\1/' /etc/chrony/chrony.conf
+  sed -i -E 's/^((pool|server) .*)/#\1/' /etc/chrony/chrony.conf
   if ! grep -q "^server ${NTP_SERVER}" /etc/chrony/chrony.conf; then
     echo "server ${NTP_SERVER} iburst" >> /etc/chrony/chrony.conf
   fi
 fi
 systemctl restart chrony
 
-log "設定時區與本地 RTC..."
+log "設定時區..."
 timedatectl set-timezone "$TIMEZONE"
-timedatectl set-local-rtc 1 --adjust-system-clock || true
 
 # ===================== 8. QEMU Guest Agent =====================
 log "啟用 QEMU Guest Agent..."
